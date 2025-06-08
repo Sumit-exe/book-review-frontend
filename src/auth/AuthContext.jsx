@@ -11,8 +11,9 @@ export const AuthProvider = ({ children }) => {
   const login = (userData, jwtToken) => {
     setUser(userData);
     setToken(jwtToken);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(userData.username));
     localStorage.setItem('token', jwtToken);
+    localStorage.setItem('userId', JSON.stringify(userData._id));
     navigate('/');
   };
 
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
     setToken('');
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     navigate('/login');
   };
 

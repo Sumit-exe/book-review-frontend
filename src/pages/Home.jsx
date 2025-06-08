@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; // 👈 import this
 import axios from "axios";
 import BookCard from "../components/BookCard"; // Adjust the path as needed
 
@@ -7,6 +8,16 @@ const Home = () => {
   const [books, setBooks] = useState([]);
   const [filter, setFilter] = useState({ author: "", genre: "" });
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate(); // 👈 initialize
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const username = localStorage.getItem("user");
+
+    if (!token || !username) {
+      navigate("/login"); // 👈 redirect
+    }
+  }, [navigate]);
 
   const fetchBooks = async () => {
     try {

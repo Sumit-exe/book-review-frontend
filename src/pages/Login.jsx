@@ -13,7 +13,7 @@ const Login = () => {
     e.preventDefault();
     try {
       const res = await axios.post(`${baseURL}/auth/login`, { email, password });
-      login(res.data.username, res.data.token);
+      login(res.data, res.data.token);
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed');
     }

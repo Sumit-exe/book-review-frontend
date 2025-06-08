@@ -11,15 +11,16 @@ const BookDetail = () => {
   const [reviews, setReviews] = useState([]);
   const [averageRating, setAverageRating] = useState(0);
   const [loading, setLoading] = useState(true);
-
   const [newReview, setNewReview] = useState({ comment: "", rating: 0 });
   const [submitting, setSubmitting] = useState(false);
+  const [editingReview, setEditingReview] = useState(null);
+
+  const currentUserId = localStorage.getItem("userId");
 
   useEffect(() => {
     const fetchBook = async () => {
       try {
         const res = await axios.get(`${baseURL}/books/${id}`);
-        console.log(res.data)
         setBook(res.data.book);
         setReviews(res.data.reviews);
         setAverageRating(res.data.averageRating);
@@ -33,28 +34,39 @@ const BookDetail = () => {
   }, [id]);
 
   const handleReviewSubmit = async (e) => {
-  e.preventDefault();
-  setSubmitting(true);
-  try {
-    const token = localStorage.getItem('token'); // or wherever you store your auth token
-    const res = await axios.post(
-      `${baseURL}/books/${id}/reviews`,
-      newReview,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      }
-    );
-    setReviews((prev) => [...prev, res.data]);
-    setNewReview({ comment: "", rating: 0 });
-  } catch (err) {
-    console.error("Failed to submit review", err);
-  } finally {
-    setSubmitting(false);
-  }
-};
+    e.preventDefault();
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${baseURL}/books/${id}/reviews`,
+        newReview,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setReviews((prev) => [...prev, res.data]);
+      setNewReview({ comment: "", rating: 0 });
+    } catch (err) {
+      console.error("Failed to submit review", err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
+  const deleteReview = async (reviewId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await axios.delete(`${baseURL}/reviews/${reviewId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setReviews(reviews.filter((r) => r._id !== reviewId));
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
+  };
+
+  const startEditReview = (review) => {
+    setEditingReview({ ...review });
+  };
 
   const renderStars = (count) => "⭐".repeat(count) + "☆".repeat(5 - count);
 
@@ -63,7 +75,6 @@ const BookDetail = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      {/* Go Back */}
       <button
         className="mb-4 text-sm text-blue-500 hover:underline"
         onClick={() => navigate(-1)}
@@ -81,9 +92,15 @@ const BookDetail = () => {
           />
         )}
         <div>
-          <h2 className="text-3xl font-bold text-blue-600 mb-2">{book.title}</h2>
-          <p className="text-gray-800 mb-1"><strong>Author:</strong> {book.author}</p>
-          <p className="text-gray-800 mb-1"><strong>Genre:</strong> {book.genre}</p>
+          <h2 className="text-3xl font-bold text-blue-600 mb-2">
+            {book.title}
+          </h2>
+          <p className="text-gray-800 mb-1">
+            <strong>Author:</strong> {book.author}
+          </p>
+          <p className="text-gray-800 mb-1">
+            <strong>Genre:</strong> {book.genre}
+          </p>
           <p className="text-gray-700 mt-2">
             <strong>Average Rating:</strong>{" "}
             {averageRating ? `${averageRating.toFixed(1)} / 5.0` : "No ratings yet"}
@@ -91,7 +108,7 @@ const BookDetail = () => {
         </div>
       </div>
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       <div className="mb-10">
         <h3 className="text-xl font-semibold mb-3 text-blue-500">Reviews</h3>
         {reviews.length === 0 ? (
@@ -99,12 +116,102 @@ const BookDetail = () => {
         ) : (
           <div className="space-y-4">
             {reviews.map((review, idx) => (
-              <div key={idx} className="p-4 bg-gray-100 rounded shadow-sm">
+              <div key={idx} className="p-4 bg-gray-100 rounded shadow-sm relative">
                 <p className="text-gray-800 italic">"{review.comment}"</p>
                 <p className="text-sm text-yellow-600 mt-1">
                   Rating: {renderStars(review.rating)} ({review.rating}/5)
                 </p>
-                <p className="text-sm text-gray-500">By: {review.createdBy || "Anonymous"}</p>
+                <p className="text-sm text-gray-500">
+                  By: {review.createdBy || "Anonymous"}
+                </p>
+
+                {JSON.stringify(review.userId) === currentUserId && (
+                  <div className="flex gap-3 mt-3">
+                    <button
+                      onClick={() => startEditReview(review)}
+                      className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => deleteReview(review._id)}
+                      className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+
+                {editingReview?._id === review._id && (
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      const token = localStorage.getItem("token");
+                      try {
+                        const res = await axios.put(
+                          `${baseURL}/books/${editingReview._id}`,
+                          {
+                            rating: editingReview.rating,
+                            comment: editingReview.comment,
+                          },
+                          { headers: { Authorization: `Bearer ${token}` } }
+                        );
+                        setReviews((prev) =>
+                          prev.map((r) =>
+                            r._id === editingReview._id ? res.data : r
+                          )
+                        );
+                        setEditingReview(null);
+                      } catch (err) {
+                        console.error("Update failed", err);
+                      }
+                    }}
+                    className="mt-4 space-y-2"
+                  >
+                    <textarea
+                      rows={3}
+                      value={editingReview.comment}
+                      onChange={(e) =>
+                        setEditingReview((prev) => ({
+                          ...prev,
+                          comment: e.target.value,
+                        }))
+                      }
+                      className="w-full p-2 border rounded"
+                    />
+                    <select
+                      value={editingReview.rating}
+                      onChange={(e) =>
+                        setEditingReview((prev) => ({
+                          ...prev,
+                          rating: parseInt(e.target.value),
+                        }))
+                      }
+                      className="w-full p-2 border rounded"
+                    >
+                      {[1, 2, 3, 4, 5].map((r) => (
+                        <option key={r} value={r}>
+                          {r} - {renderStars(r)}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        className="bg-green-600 text-white px-4 py-1 rounded hover:bg-green-700"
+                      >
+                        Update
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setEditingReview(null)}
+                        className="bg-gray-300 text-gray-800 px-4 py-1 rounded hover:bg-gray-400"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
               </div>
             ))}
           </div>
@@ -131,9 +238,12 @@ const BookDetail = () => {
               required
               value={newReview.rating}
               onChange={(e) =>
-                setNewReview((prev) => ({ ...prev, rating: parseInt(e.target.value) }))
+                setNewReview((prev) => ({
+                  ...prev,
+                  rating: parseInt(e.target.value),
+                }))
               }
-              className="p-2 border rounded"
+              className="p-2 border rounded w-full"
             >
               <option value={0}>Select Rating</option>
               {[1, 2, 3, 4, 5].map((r) => (
