@@ -55,7 +55,7 @@ const BookDetail = () => {
   const deleteReview = async (reviewId) => {
     const token = localStorage.getItem("token");
     try {
-      await axios.delete(`${baseURL}/reviews/${reviewId}`, {
+      await axios.delete(`${baseURL}/books/${reviewId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setReviews(reviews.filter((r) => r._id !== reviewId));
@@ -129,13 +129,13 @@ const BookDetail = () => {
                   <div className="flex gap-3 mt-3">
                     <button
                       onClick={() => startEditReview(review)}
-                      className="text-sm bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 transition"
+                      className="text-sm text-blue-500 px-3 py-1 rounded hover:bg-blue-600 hover:text-white transition"
                     >
                       Edit
                     </button>
                     <button
                       onClick={() => deleteReview(review._id)}
-                      className="text-sm bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600 transition"
+                      className="text-sm text-red-500 px-3 py-1 rounded hover:bg-red-600 hover:text-white transition"
                     >
                       Delete
                     </button>

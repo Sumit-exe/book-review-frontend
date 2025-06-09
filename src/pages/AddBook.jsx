@@ -54,7 +54,9 @@ const AddBook = () => {
   };
 
   return (
+    
     <div className="max-w-md mx-auto mt-8 p-6 bg-white shadow rounded">
+      
       <h2 className="text-xl font-bold mb-4">Add New Book</h2>
       {error && <p className="text-red-500 mb-2">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -107,6 +109,12 @@ const AddBook = () => {
           Add Book
         </button>
       </form>
+      <button
+        className="mb-4 text-sm text-blue-500 hover:underline"
+        onClick={() => navigate(-1)}
+      >
+        ← Cancel
+      </button>
     </div>
   );
 };
