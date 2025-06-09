@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 const BookCard = ({ book }) => {
 
   const userId = localStorage.getItem('userId');
-  console.log(book.createdBy)
-  console.log(userId)
   return (
     <Link
       to={`/books/${book._id}`}

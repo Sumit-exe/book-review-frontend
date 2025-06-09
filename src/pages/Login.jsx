@@ -28,6 +28,15 @@ const Login = () => {
         <input type="password" placeholder="Password" className="w-full p-2 border rounded" value={password} onChange={(e) => setPassword(e.target.value)} required />
         <button type="submit" className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Login</button>
       </form>
+
+<br />
+
+      <div>
+        <p><b>NOTE:</b> please SignUp first or you can use below creds</p>
+        <p><b>Email :</b> test@email.com</p>
+        <p><b>Password :</b> test</p>
+      </div>
+
     </div>
   );
 };
